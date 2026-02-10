@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASP.NET Core Web API 開發指南 - Employee 實戰版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
+        .flow-container { background: #fff; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .code-block { position: relative; }
+        .step-card { transition: transform 0.2s; }
+        .step-card:hover { transform: translateY(-5px); }
+        code { font-family: 'Consolas', 'Monaco', monospace !important; }
+        .schema-badge { @apply bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-mono; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-indigo-700 text-white py-12 px-6 text-center shadow-lg">
+        <h1 class="text-4xl font-bold mb-4">ASP.NET Core Web API 實戰教學</h1>
+        <p class="text-xl text-indigo-100">專案實作：員工與部門管理系統 (CRUD)</p>
+    </header>
+
+    <main class="max-w-5xl mx-auto py-12 px-6">
+        
+        <!-- Section 1: DB Schema -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">1. 資料庫結構 (Database Schema)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-xl border border-slate-200">
+                    <h3 class="font-bold mb-4 text-indigo-600 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path></svg>
+                        Departments 表格
+                    </h3>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex justify-between"><span>DepartmentId</span> <span class="schema-badge">PK, Identity, Int</span></li>
+                        <li class="flex justify-between"><span>DepartmentName</span> <span class="schema-badge">NVarChar(100)</span></li>
+                    </ul>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200">
+                    <h3 class="font-bold mb-4 text-indigo-600 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        Employees 表格
+                    </h3>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex justify-between"><span>EmployeeId</span> <span class="schema-badge">PK, Identity, Int</span></li>
+                        <li class="flex justify-between"><span>EmployeeName</span> <span class="schema-badge">NVarChar(100)</span></li>
+                        <li class="flex justify-between"><span>Department</span> <span class="schema-badge">NVarChar(100)</span></li>
+                        <li class="flex justify-between"><span>DateOfJoining</span> <span class="schema-badge">DateTime2</span></li>
+                        <li class="flex justify-between"><span>PhotoFileName</span> <span class="schema-badge">NVarChar(500)</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: 分層實作說明 -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">2. 實務分層代碼實作</h2>
+            
+            <div class="grid grid-cols-1 gap-12">
+                
+                <!-- Part 1: Models -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xl font-bold text-indigo-700 mb-4 flex items-center">
+                        <span class="bg-indigo-100 p-2 rounded mr-2">1</span> Models (對應資料庫欄位)
+                    </h3>
+                    <div class="code-block">
+                        <pre><code class="language-csharp">public class Employee
+{
+    public int EmployeeId { get; set; }
+    public string EmployeeName { get; set; } = "";
+    public string Department { get; set; } = "";
+    public DateTime DateOfJoining { get; set; }
+    public string PhotoFileName { get; set; } = "anonymous.png";
+}
+
+public class Department
+{
+    public int DepartmentId { get; set; }
+    public string DepartmentName { get; set; } = "";
+}</code></pre>
+                    </div>
+                </div>
+
+                <!-- Part 2: Service Layer CRUD -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xl font-bold text-indigo-700 mb-4 flex items-center">
+                        <span class="bg-indigo-100 p-2 rounded mr-2">2</span> Service Layer (員工 CRUD 邏輯)
+                    </h3>
+                    <p class="text-slate-600 mb-4 text-sm">這裡負責處理具體的資料操作，Service 內部可以使用 EF Core 或 Dapper 執行 SQL。</p>
+                    <div class="code-block">
+                        <pre><code class="language-csharp">public class EmployeeService : IEmployeeService
+{
+    // 範例：獲取所有員工 (GET)
+    public IEnumerable&lt;Employee&gt; GetAll() {
+        // 邏輯：_context.Employees.ToList();
+    }
+
+    // 範例：新增員工 (POST)
+    public Employee Create(Employee emp) {
+        // 邏輯：_context.Employees.Add(emp); _context.SaveChanges();
+        return emp;
+    }
+
+    // 範例：更新員工 (PUT)
+    public bool Update(Employee emp) {
+        // 邏輯：檢查是否存在 -> 更新屬性 -> SaveChanges();
+    }
+
+    // 範例：刪除員工 (DELETE)
+    public bool Delete(int id) {
+        // 邏輯：Find -> Remove -> SaveChanges();
+    }
+}</code></pre>
+                    </div>
+                </div>
+
+                <!-- Part 3: Controller -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xl font-bold text-indigo-700 mb-4 flex items-center">
+                        <span class="bg-indigo-100 p-2 rounded mr-2">3</span> Controller (API 端點)
+                    </h3>
+                    <pre><code class="language-csharp">[Route("api/[controller]")]
+[ApiController]
+public class EmployeesController : ControllerBase
+{
+    private readonly IEmployeeService _service;
+    public EmployeesController(IEmployeeService service) => _service = service;
+
+    [HttpGet]
+    public IActionResult Get() => Ok(_service.GetAll());
+
+    [HttpPost]
+    public IActionResult Post(Employee emp) => Ok(_service.Create(emp));
+
+    [HttpPut]
+    public IActionResult Put(Employee emp) => _service.Update(emp) ? Ok("Updated") : NotFound();
+
+    [HttpDelete("{id}")]
+    public IActionResult Delete(int id) => _service.Delete(id) ? Ok("Deleted") : NotFound();
+}</code></pre>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Section 3: Summary -->
+        <section class="bg-slate-800 text-white p-8 rounded-2xl shadow-xl">
+            <h2 class="text-2xl font-bold mb-4 italic">關鍵技術點</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h4 class="text-indigo-300 font-bold mb-2">相依性注入 (DI)</h4>
+                    <p class="text-sm text-slate-400">在 <code>Program.cs</code> 務必註冊：<br>
+                    <code class="text-xs">builder.Services.AddScoped&lt;IEmployeeService, EmployeeService&gt;();</code></p>
+                </div>
+                <div>
+                    <h4 class="text-indigo-300 font-bold mb-2">日期格式處理</h4>
+                    <p class="text-sm text-slate-400"><code>DateOfJoining</code> 傳輸時應遵循 ISO 8601 格式，.NET 會自動解析為 DateTime2。</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-8 text-slate-400 text-sm">
+        Employee & Department API 專案手冊 &copy; 2026
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-csharp.min.js"></script>
+</body>
+</html>
