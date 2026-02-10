@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASP.NET Core Web API 開發指南 - Employee 實戰版</title>
+    <title>ASP.NET Core Web API 開發指南</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
@@ -14,7 +14,6 @@
         .step-card { transition: transform 0.2s; }
         .step-card:hover { transform: translateY(-5px); }
         code { font-family: 'Consolas', 'Monaco', monospace !important; }
-        .schema-badge { @apply bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-mono; }
     </style>
 </head>
 <body class="text-slate-800">
@@ -22,126 +21,148 @@
     <!-- Header -->
     <header class="bg-indigo-700 text-white py-12 px-6 text-center shadow-lg">
         <h1 class="text-4xl font-bold mb-4">ASP.NET Core Web API 實戰教學</h1>
-        <p class="text-xl text-indigo-100">專案實作：員工與部門管理系統 (CRUD)</p>
+        <p class="text-xl text-indigo-100">從基礎概念到 Service Layer 分層架構</p>
     </header>
 
     <main class="max-w-5xl mx-auto py-12 px-6">
         
-        <!-- Section 1: DB Schema -->
+        <!-- Section 1: 核心流程圖解 -->
         <section class="mb-16">
-            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">1. 資料庫結構 (Database Schema)</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white p-6 rounded-xl border border-slate-200">
-                    <h3 class="font-bold mb-4 text-indigo-600 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path></svg>
-                        Departments 表格
-                    </h3>
-                    <ul class="space-y-2 text-sm">
-                        <li class="flex justify-between"><span>DepartmentId</span> <span class="schema-badge">PK, Identity, Int</span></li>
-                        <li class="flex justify-between"><span>DepartmentName</span> <span class="schema-badge">NVarChar(100)</span></li>
-                    </ul>
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">1. 請求的生命週期 (Life of a Request)</h2>
+            <p class="mb-6 text-slate-600">當客戶端發送一個請求到 Web API 時，它會經過以下處理管線：</p>
+            
+            <div class="flow-container p-8 overflow-x-auto">
+                <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4">
+                    <!-- Client -->
+                    <div class="flex flex-col items-center">
+                        <div class="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mb-2">
+                            <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <span class="font-bold">客戶端</span>
+                    </div>
+
+                    <div class="text-indigo-400 font-bold hidden md:block">→</div>
+
+                    <!-- Middleware -->
+                    <div class="bg-indigo-50 border-2 border-indigo-200 p-4 rounded-lg text-center w-32 step-card">
+                        <div class="text-xs text-indigo-500 mb-1">Step 1</div>
+                        <div class="font-bold">Middleware</div>
+                        <div class="text-[10px] text-slate-400">驗證、日誌</div>
+                    </div>
+
+                    <div class="text-indigo-400 font-bold">→</div>
+
+                    <!-- Routing -->
+                    <div class="bg-indigo-50 border-2 border-indigo-200 p-4 rounded-lg text-center w-32 step-card">
+                        <div class="text-xs text-indigo-500 mb-1">Step 2</div>
+                        <div class="font-bold">Routing</div>
+                        <div class="text-[10px] text-slate-400">路徑匹配</div>
+                    </div>
+
+                    <div class="text-indigo-400 font-bold">→</div>
+
+                    <!-- Controller -->
+                    <div class="bg-indigo-600 text-white p-4 rounded-lg text-center w-32 shadow-md step-card">
+                        <div class="text-xs text-indigo-200 mb-1">Step 3</div>
+                        <div class="font-bold">Controller</div>
+                        <div class="text-[10px] text-indigo-100">處理請求</div>
+                    </div>
+
+                    <div class="text-indigo-400 font-bold">→</div>
+
+                    <!-- Service -->
+                    <div class="bg-emerald-500 text-white p-4 rounded-lg text-center w-32 shadow-md step-card">
+                        <div class="text-xs text-emerald-100 mb-1">Step 4</div>
+                        <div class="font-bold">Service</div>
+                        <div class="text-[10px] text-emerald-50 text-nowrap">業務邏輯</div>
+                    </div>
+
+                    <div class="text-indigo-400 font-bold">→</div>
+
+                    <!-- DB -->
+                    <div class="flex flex-col items-center">
+                        <div class="w-16 h-16 bg-slate-800 text-white rounded-lg flex items-center justify-center mb-2">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+                        </div>
+                        <span class="font-bold">資料庫</span>
+                    </div>
                 </div>
-                <div class="bg-white p-6 rounded-xl border border-slate-200">
-                    <h3 class="font-bold mb-4 text-indigo-600 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                        Employees 表格
-                    </h3>
-                    <ul class="space-y-2 text-sm">
-                        <li class="flex justify-between"><span>EmployeeId</span> <span class="schema-badge">PK, Identity, Int</span></li>
-                        <li class="flex justify-between"><span>EmployeeName</span> <span class="schema-badge">NVarChar(100)</span></li>
-                        <li class="flex justify-between"><span>Department</span> <span class="schema-badge">NVarChar(100)</span></li>
-                        <li class="flex justify-between"><span>DateOfJoining</span> <span class="schema-badge">DateTime2</span></li>
-                        <li class="flex justify-between"><span>PhotoFileName</span> <span class="schema-badge">NVarChar(500)</span></li>
-                    </ul>
+                
+                <!-- Return Path -->
+                <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+                    <p class="text-sm text-slate-500 italic">完成處理後，資料會依照原路徑封裝為 HTTP Response 回傳給客戶端。</p>
                 </div>
             </div>
         </section>
 
         <!-- Section 2: 分層實作說明 -->
         <section class="mb-16">
-            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">2. 實務分層代碼實作</h2>
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">2. 分層架構實作 (CRUD)</h2>
             
-            <div class="grid grid-cols-1 gap-12">
+            <div class="grid grid-cols-1 gap-8">
                 
-                <!-- Part 1: Models -->
+                <!-- Part 1: Service Layer -->
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <h3 class="text-xl font-bold text-indigo-700 mb-4 flex items-center">
-                        <span class="bg-indigo-100 p-2 rounded mr-2">1</span> Models (對應資料庫欄位)
+                        <span class="bg-indigo-100 p-2 rounded mr-2">1</span> Service Layer (介面與實作)
                     </h3>
-                    <div class="code-block">
-                        <pre><code class="language-csharp">public class Employee
+                    <p class="text-slate-600 mb-4">我們定義 <code>IProductService</code> 來規範功能，這使得 Controller 不需要知道底層是如何讀取資料的。</p>
+                    
+                    <div class="code-block mb-4">
+                        <div class="bg-slate-800 text-slate-300 text-xs px-4 py-2 rounded-t-lg">IProductService.cs</div>
+                        <pre><code class="language-csharp">public interface IProductService 
 {
-    public int EmployeeId { get; set; }
-    public string EmployeeName { get; set; } = "";
-    public string Department { get; set; } = "";
-    public DateTime DateOfJoining { get; set; }
-    public string PhotoFileName { get; set; } = "anonymous.png";
-}
+    IEnumerable&lt;Product&gt; GetAll();
+    Product Add(Product item);
+}</code></pre>
+                    </div>
 
-public class Department
+                    <div class="code-block">
+                        <div class="bg-slate-800 text-slate-300 text-xs px-4 py-2 rounded-t-lg">ProductService.cs</div>
+                        <pre><code class="language-csharp">public class ProductService : IProductService 
 {
-    public int DepartmentId { get; set; }
-    public string DepartmentName { get; set; } = "";
+    private readonly List&lt;Product&gt; _db = new();
+
+    public IEnumerable&lt;Product&gt; GetAll() => _db;
+
+    public Product Add(Product item) 
+    {
+        _db.Add(item);
+        return item;
+    }
 }</code></pre>
                     </div>
                 </div>
 
-                <!-- Part 2: Service Layer CRUD -->
+                <!-- Part 2: DI Registration -->
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <h3 class="text-xl font-bold text-indigo-700 mb-4 flex items-center">
-                        <span class="bg-indigo-100 p-2 rounded mr-2">2</span> Service Layer (員工 CRUD 邏輯)
+                        <span class="bg-indigo-100 p-2 rounded mr-2">2</span> 依賴注入 (Dependency Injection)
                     </h3>
-                    <p class="text-slate-600 mb-4 text-sm">這裡負責處理具體的資料操作，Service 內部可以使用 EF Core 或 Dapper 執行 SQL。</p>
-                    <div class="code-block">
-                        <pre><code class="language-csharp">public class EmployeeService : IEmployeeService
-{
-    // 範例：獲取所有員工 (GET)
-    public IEnumerable&lt;Employee&gt; GetAll() {
-        // 邏輯：_context.Employees.ToList();
-    }
+                    <p class="text-slate-600 mb-4">在 <code>Program.cs</code> 註冊服務，這就是將「介面」與「實作」連結在一起的關鍵。</p>
+                    <pre><code class="language-csharp">// Program.cs
+var builder = WebApplication.CreateBuilder(args);
 
-    // 範例：新增員工 (POST)
-    public Employee Create(Employee emp) {
-        // 邏輯：_context.Employees.Add(emp); _context.SaveChanges();
-        return emp;
-    }
-
-    // 範例：更新員工 (PUT)
-    public bool Update(Employee emp) {
-        // 邏輯：檢查是否存在 -> 更新屬性 -> SaveChanges();
-    }
-
-    // 範例：刪除員工 (DELETE)
-    public bool Delete(int id) {
-        // 邏輯：Find -> Remove -> SaveChanges();
-    }
-}</code></pre>
-                    </div>
+// 當有人要求 IProductService，請給他 ProductService 實例
+builder.Services.AddScoped&lt;IProductService, ProductService&gt;();</code></pre>
                 </div>
 
                 <!-- Part 3: Controller -->
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <h3 class="text-xl font-bold text-indigo-700 mb-4 flex items-center">
-                        <span class="bg-indigo-100 p-2 rounded mr-2">3</span> Controller (API 端點)
+                        <span class="bg-indigo-100 p-2 rounded mr-2">3</span> Controller (門面)
                     </h3>
-                    <pre><code class="language-csharp">[Route("api/[controller]")]
-[ApiController]
-public class EmployeesController : ControllerBase
+                    <p class="text-slate-600 mb-4">Controller 透過建構子注入獲得 Service，只負責調度，不處理邏輯。</p>
+                    <pre><code class="language-csharp">[ApiController]
+[Route("api/[controller]")]
+public class ProductsController : ControllerBase 
 {
-    private readonly IEmployeeService _service;
-    public EmployeesController(IEmployeeService service) => _service = service;
+    private readonly IProductService _service;
+
+    public ProductsController(IProductService service) => _service = service;
 
     [HttpGet]
     public IActionResult Get() => Ok(_service.GetAll());
-
-    [HttpPost]
-    public IActionResult Post(Employee emp) => Ok(_service.Create(emp));
-
-    [HttpPut]
-    public IActionResult Put(Employee emp) => _service.Update(emp) ? Ok("Updated") : NotFound();
-
-    [HttpDelete("{id}")]
-    public IActionResult Delete(int id) => _service.Delete(id) ? Ok("Deleted") : NotFound();
 }</code></pre>
                 </div>
 
@@ -150,24 +171,18 @@ public class EmployeesController : ControllerBase
 
         <!-- Section 3: Summary -->
         <section class="bg-slate-800 text-white p-8 rounded-2xl shadow-xl">
-            <h2 class="text-2xl font-bold mb-4 italic">關鍵技術點</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                    <h4 class="text-indigo-300 font-bold mb-2">相依性注入 (DI)</h4>
-                    <p class="text-sm text-slate-400">在 <code>Program.cs</code> 務必註冊：<br>
-                    <code class="text-xs">builder.Services.AddScoped&lt;IEmployeeService, EmployeeService&gt;();</code></p>
-                </div>
-                <div>
-                    <h4 class="text-indigo-300 font-bold mb-2">日期格式處理</h4>
-                    <p class="text-sm text-slate-400"><code>DateOfJoining</code> 傳輸時應遵循 ISO 8601 格式，.NET 會自動解析為 DateTime2。</p>
-                </div>
-            </div>
+            <h2 class="text-2xl font-bold mb-4">學習總結</h2>
+            <ul class="space-y-3 list-disc list-inside text-slate-300">
+                <li><span class="text-white font-bold">解耦合：</span>Controller 不再依賴具體實作，測試更容易。</li>
+                <li><span class="text-white font-bold">單一職責：</span>Service 專注邏輯，Controller 專注傳輸。</li>
+                <li><span class="text-white font-bold">擴充性：</span>未來若要更換為 Oracle 或 MSSQL 資料庫，只需建立新的 Service 實作並修改 DI 註冊。</li>
+            </ul>
         </section>
 
     </main>
 
     <footer class="text-center py-8 text-slate-400 text-sm">
-        Employee & Department API 專案手冊 &copy; 2026
+        ASP.NET Core Web API 學習手冊 &copy; 2024
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
