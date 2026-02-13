@@ -171,10 +171,28 @@
             </div>
         </section>
 
-        <!-- Section 3: Model 實體模型配置 (NEW) -->
+        <!-- Section 3: 開發工具與快速啟動 (已調整順序) -->
         <section class="mb-16">
-            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">3. Model 實體模型配置 (C# Classes)</h2>
-            <p class="mb-6 text-slate-600">在 .NET 中，我們使用 POCO 類別來映射資料表。透過 <span class="annotation">Data Annotations</span>，我們可以定義主鍵、必填項與長度限制。</p>
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">3. 開發工具與快速啟動 (VS Code CLI)</h2>
+            <p class="mb-4 text-slate-600">在開始寫程式之前，必須先透過 .NET CLI 建立專案骨架：</p>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+                <code class="cli-cmd">
+                    # 1. 建立 Web API 專案 (這是開發的第一步)<br>
+                    dotnet new webapi -n EmployeeManager<br><br>
+                    # 2. 進入專案目錄<br>
+                    cd EmployeeManager<br><br>
+                    # 3. 安裝必要的 SQL Server 套件<br>
+                    dotnet add package Microsoft.EntityFrameworkCore.SqlServer<br><br>
+                    # 4. 啟動熱更啟動服務<br>
+                    dotnet watch run
+                </code>
+            </div>
+        </section>
+
+        <!-- Section 4: Model 實體模型配置 (已調整順序) -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">4. Model 實體模型配置 (C# Classes)</h2>
+            <p class="mb-6 text-slate-600">專案建立完成後，我們在 <code>Models/</code> 資料夾下定義與資料表對應的 POCO 類別：</p>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- Employee Model -->
@@ -206,36 +224,18 @@ public class Employee
                     <ul class="space-y-4 text-sm text-slate-600">
                         <li class="flex items-start">
                             <span class="bg-pink-100 text-pink-600 px-2 py-0.5 rounded font-mono mr-2 text-xs">[Key]</span>
-                            <span>標記此欄位為資料庫的主鍵 (Primary Key)。</span>
+                            <span>標記主鍵，Entity Framework 會自動識別。</span>
                         </li>
                         <li class="flex items-start">
                             <span class="bg-pink-100 text-pink-600 px-2 py-0.5 rounded font-mono mr-2 text-xs">[Required]</span>
-                            <span>標記為必填。API 接收請求時若遺漏此項，會自動回傳 400 Bad Request。</span>
+                            <span>API 接收請求時會自動檢查此欄位是否為空。</span>
                         </li>
                         <li class="flex items-start">
                             <span class="bg-pink-100 text-pink-600 px-2 py-0.5 rounded font-mono mr-2 text-xs">[StringLength]</span>
-                            <span>限制字串最大長度，對應 SQL 的 <code>nvarchar(100)</code>。</span>
-                        </li>
-                        <li class="mt-4 pt-4 border-t border-slate-200 italic">
-                            提示：.NET 的 <code class="text-indigo-600">DateTime</code> 會自動精準映射到 SQL 的 <code class="text-indigo-600">datetime2</code>。
+                            <span>限制字串長度，與資料庫設定保持一致。</span>
                         </li>
                     </ul>
                 </div>
-            </div>
-        </section>
-
-        <!-- Section 4: 開發工具與快速啟動 -->
-        <section class="mb-16">
-            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">4. 開發工具與快速啟動 (VS Code CLI)</h2>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
-                <code class="cli-cmd">
-                    # 1. 建立 Web API 專案<br>
-                    dotnet new webapi -n EmployeeManager<br><br>
-                    # 2. 安裝必要的 SQL Server 套件 (如果使用 EF Core)<br>
-                    dotnet add package Microsoft.EntityFrameworkCore.SqlServer<br><br>
-                    # 3. 啟動熱更啟動服務<br>
-                    dotnet watch run
-                </code>
             </div>
         </section>
 
@@ -319,7 +319,7 @@ public IActionResult Post(Employee emp)
 
     </main>
 
-    <footer class="text-center py-8 text-slate-400 text-sm">
+    <footer class="text-center py-8 text-slate-400 text-sm border-t border-slate-100">
         ASP.NET Core Web API 學習手冊 &copy; 2026
     </footer>
 
