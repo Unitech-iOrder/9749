@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASP.NET Core Web API 完整開發手冊</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
+        .flow-container { background: #fff; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .code-block { position: relative; }
+        .step-card { transition: transform 0.2s; }
+        .step-card:hover { transform: translateY(-5px); }
+        .cli-cmd { @apply bg-slate-900 text-emerald-400 p-4 rounded-lg font-mono text-sm mb-4 block border-l-4 border-emerald-500 shadow-inner; }
+        code { font-family: 'Consolas', 'Monaco', monospace !important; }
+        .process-step { @apply border-l-4 border-indigo-500 pl-6 py-4 relative; }
+        .process-step::before { content: ""; @apply absolute -left-[9px] top-6 w-4 h-4 bg-indigo-500 rounded-full border-2 border-white; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-indigo-700 text-white py-12 px-6 text-center shadow-lg">
+        <h1 class="text-4xl font-bold mb-4">ASP.NET Core Web API 實戰教學</h1>
+        <p class="text-xl text-indigo-100">專案實作：Employees 與 Departments 管理系統</p>
+    </header>
+
+    <main class="max-w-5xl mx-auto py-12 px-6">
+        
+        <!-- Section 1: 核心流程圖解 -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">1. 請求的生命週期 (Life of a Request)</h2>
+            <p class="mb-6 text-slate-600">當客戶端發送一個請求（例如新增員工）時，它會依序經過以下管線：</p>
+            
+            <div class="flow-container p-8 overflow-x-auto">
+                <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4">
+                    <!-- Client -->
+                    <div class="flex flex-col items-center">
+                        <div class="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mb-2">
+                            <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <span class="font-bold">客戶端</span>
+                    </div>
+                    <div class="text-indigo-400 font-bold hidden md:block">→</div>
+                    <!-- Middleware -->
+                    <div class="bg-indigo-50 border-2 border-indigo-200 p-4 rounded-lg text-center w-32 step-card">
+                        <div class="font-bold">Middleware</div>
+                        <div class="text-[10px] text-slate-400">驗證、CORS</div>
+                    </div>
+                    <div class="text-indigo-400 font-bold">→</div>
+                    <!-- Controller -->
+                    <div class="bg-indigo-600 text-white p-4 rounded-lg text-center w-32 shadow-md step-card">
+                        <div class="font-bold">Controller</div>
+                        <div class="text-[10px] text-indigo-100">路由分發</div>
+                    </div>
+                    <div class="text-indigo-400 font-bold">→</div>
+                    <!-- Service -->
+                    <div class="bg-emerald-500 text-white p-4 rounded-lg text-center w-32 shadow-md step-card">
+                        <div class="font-bold">Service</div>
+                        <div class="text-[10px] text-emerald-50">業務邏輯</div>
+                    </div>
+                    <div class="text-indigo-400 font-bold">→</div>
+                    <!-- DB -->
+                    <div class="flex flex-col items-center">
+                        <div class="w-16 h-16 bg-slate-800 text-white rounded-lg flex items-center justify-center mb-2">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+                        </div>
+                        <span class="font-bold">資料庫</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: 分層架構實作 -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">2. 開發工具與快速啟動 (VS Code CLI)</h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+                <p class="text-slate-600 mb-4">使用以下指令快速建立您的 Employee 管理系統：</p>
+                <code class="cli-cmd">
+                    # 1. 建立 Web API 專案<br>
+                    dotnet new webapi -n EmployeeManager<br><br>
+                    # 2. 安裝必要的 SQL Server 套件 (如果使用 EF Core)<br>
+                    dotnet add package Microsoft.EntityFrameworkCore.SqlServer<br><br>
+                    # 3. 啟動熱更啟動服務<br>
+                    dotnet watch run
+                </code>
+            </div>
+        </section>
+
+        <!-- Section 3: 實戰演練 (重要更新) -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">3. CRUD 流程詳解：從請求到回復</h2>
+            <p class="mb-8 text-slate-600 font-medium">我們以「新增一位員工 (POST)」為例，說明資料如何在這兩個表格間流動：</p>
+
+            <div class="space-y-4">
+                <!-- Step 1 -->
+                <div class="process-step">
+                    <h3 class="font-bold text-lg text-indigo-700">步驟 A：客戶端發出請求 (HTTP POST)</h3>
+                    <p class="text-sm text-slate-500 mb-4">前端發送包含員工資訊的 JSON 資料。注意 <code>Department</code> 必須匹配現有的部門名稱。</p>
+                    <pre><code class="language-json">{
+  "EmployeeName": "李大明",
+  "Department": "IT 部門",
+  "DateOfJoining": "2026-02-10",
+  "PhotoFileName": "daming.png"
+}</code></pre>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="process-step">
+                    <h3 class="font-bold text-lg text-indigo-700">步驟 B：Controller 接收並驗證</h3>
+                    <p class="text-sm text-slate-500 mb-4">API 透過 <code>EmployeesController</code> 接收 DTO，並呼叫 Service 層。</p>
+                    <pre><code class="language-csharp">[HttpPost]
+public IActionResult Post(Employee emp) 
+{
+    var result = _service.AddEmployee(emp);
+    return CreatedAtAction(nameof(Get), new { id = result.EmployeeId }, result);
+}</code></pre>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="process-step">
+                    <h3 class="font-bold text-lg text-indigo-700">步驟 C：Service 處理業務邏輯</h3>
+                    <p class="text-sm text-slate-500 mb-4">在 <code>EmployeeService</code> 中，我們會先確認 <code>Departments</code> 表格中是否存在該部門，確保資料完整性。</p>
+                    <pre><code class="language-csharp">public Employee AddEmployee(Employee emp) 
+{
+    // 檢查部門是否存在
+    var deptExists = _deptService.GetAll().Any(d => d.DepartmentName == emp.Department);
+    if (!deptExists) throw new Exception("無效的部門名稱");
+
+    return _repository.Save(emp); // 進入資料庫層
+}</code></pre>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="process-step">
+                    <h3 class="font-bold text-lg text-indigo-700">步驟 D：資料庫回復 (CRUD Result)</h3>
+                    <p class="text-sm text-slate-500 mb-4">SQL Server 執行 <code>INSERT</code> 指令，並回傳自動生成的 <code>EmployeeId</code>。</p>
+                    <div class="bg-slate-100 p-4 rounded text-xs font-mono text-slate-700">
+                        INSERT INTO [Employees] (EmployeeName, Department, DateOfJoining, PhotoFileName) <br>
+                        VALUES ('李大明', 'IT 部門', '2026-02-10', 'daming.png'); <br>
+                        -- 回傳：EmployeeId = 1
+                    </div>
+                </div>
+
+                <!-- Step 5 -->
+                <div class="process-step border-transparent">
+                    <h3 class="font-bold text-lg text-emerald-600">步驟 E：客戶端收到 201 Created 回復</h3>
+                    <p class="text-sm text-slate-500">最終 API 將帶有 ID 的完整物件回傳，前端即可更新 UI 顯示新員工。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: 測試指南 -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">4. 如何測試 (Testing)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+                    <h4 class="font-bold mb-2">使用 Swagger UI</h4>
+                    <p class="text-sm text-slate-600">執行專案後存取 <code>/swagger</code>。您可以視覺化地填寫欄位並觀察回傳狀態碼 (200, 201, 404)。</p>
+                </div>
+                <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-100">
+                    <h4 class="font-bold mb-2">使用 VS Code REST Client</h4>
+                    <p class="text-sm text-slate-600">在 <code>.http</code> 檔案中撰寫：<br>
+                    <code class="text-xs bg-white px-1">GET http://localhost:5000/api/Employees</code></p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-8 text-slate-400 text-sm">
+        ASP.NET Core Web API 學習手冊 &copy; 2026
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-csharp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+</body>
+</html>
