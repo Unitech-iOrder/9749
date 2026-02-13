@@ -32,7 +32,7 @@
         <!-- Section 1: 核心流程圖解 -->
         <section class="mb-16">
             <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">1. 請求的生命週期 (Life of a Request)</h2>
-            <p class="mb-6 text-slate-600">當客戶端發送一個請求（例如新增員工）時，它會依序經過以下管線：</p>
+            <p class="mb-6 text-slate-600">當客戶端發送一個請求時，路由系統（Routing）是決定請求去向的導航儀：</p>
             
             <div class="flow-container p-8 overflow-x-auto">
                 <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4">
@@ -47,19 +47,25 @@
                     <!-- Middleware -->
                     <div class="bg-indigo-50 border-2 border-indigo-200 p-4 rounded-lg text-center w-32 step-card">
                         <div class="font-bold">Middleware</div>
-                        <div class="text-[10px] text-slate-400">驗證、CORS</div>
+                        <div class="text-[10px] text-slate-400">過濾與授權</div>
+                    </div>
+                    <div class="text-indigo-400 font-bold">→</div>
+                    <!-- Routing Layer -->
+                    <div class="bg-amber-100 border-2 border-amber-300 p-4 rounded-lg text-center w-32 step-card">
+                        <div class="font-bold text-amber-700">Routing</div>
+                        <div class="text-[10px] text-amber-600">匹配控制器</div>
                     </div>
                     <div class="text-indigo-400 font-bold">→</div>
                     <!-- Controller -->
                     <div class="bg-indigo-600 text-white p-4 rounded-lg text-center w-32 shadow-md step-card">
                         <div class="font-bold">Controller</div>
-                        <div class="text-[10px] text-indigo-100">路由分發</div>
+                        <div class="text-[10px] text-indigo-100">解析請求參數</div>
                     </div>
                     <div class="text-indigo-400 font-bold">→</div>
                     <!-- Service -->
                     <div class="bg-emerald-500 text-white p-4 rounded-lg text-center w-32 shadow-md step-card">
                         <div class="font-bold">Service</div>
-                        <div class="text-[10px] text-emerald-50">業務邏輯</div>
+                        <div class="text-[10px] text-emerald-50">執行 CRUD</div>
                     </div>
                     <div class="text-indigo-400 font-bold">→</div>
                     <!-- DB -->
@@ -91,14 +97,14 @@
 
         <!-- Section 3: 實戰演練 (重要更新) -->
         <section class="mb-16">
-            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">3. CRUD 流程詳解：從請求到回復</h2>
-            <p class="mb-8 text-slate-600 font-medium">我們以「新增一位員工 (POST)」為例，說明資料如何在這兩個表格間流動：</p>
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">3. CRUD 流程詳解：路由匹配到資料庫存取</h2>
+            <p class="mb-8 text-slate-600 font-medium">我們以「新增一位員工 (POST)」為例，說明資料如何流過每一個環節：</p>
 
             <div class="space-y-4">
                 <!-- Step 1 -->
                 <div class="process-step">
-                    <h3 class="font-bold text-lg text-indigo-700">步驟 A：客戶端發出請求 (HTTP POST)</h3>
-                    <p class="text-sm text-slate-500 mb-4">前端發送包含員工資訊的 JSON 資料。注意 <code>Department</code> 必須匹配現有的部門名稱。</p>
+                    <h3 class="font-bold text-lg text-indigo-700">步驟 A：客戶端發出請求</h3>
+                    <p class="text-sm text-slate-500 mb-4">發送目標 URL 為 <code>/api/Employees</code>，動詞為 <code>POST</code>。</p>
                     <pre><code class="language-json">{
   "EmployeeName": "李大明",
   "Department": "IT 部門",
@@ -107,47 +113,62 @@
 }</code></pre>
                 </div>
 
-                <!-- Step 2 -->
+                <!-- Step 2 (NEW: Routing) -->
                 <div class="process-step">
-                    <h3 class="font-bold text-lg text-indigo-700">步驟 B：Controller 接收並驗證</h3>
-                    <p class="text-sm text-slate-500 mb-4">API 透過 <code>EmployeesController</code> 接收 DTO，並呼叫 Service 層。</p>
+                    <h3 class="font-bold text-lg text-amber-600">步驟 B：路由引擎匹配 (Routing Match)</h3>
+                    <p class="text-sm text-slate-500 mb-2">路由引擎會檢查 Controller 上的屬性標記：</p>
+                    <ul class="list-disc list-inside text-xs text-slate-600 space-y-1 mb-4">
+                        <li><code>[Route("api/[controller]")]</code>：將 URL 段 <code>Employees</code> 映射到 <code>EmployeesController</code>。</li>
+                        <li><code>[HttpPost]</code>：確認請求動詞為 POST，找到正確的處理方法。</li>
+                    </ul>
+                    <div class="bg-amber-50 p-4 rounded border border-amber-200 text-xs font-mono">
+                        <span class="text-amber-800">// 路由決策過程</span><br>
+                        URL: /api/Employees + Verb: POST => 執行 EmployeesController.Post()
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="process-step">
+                    <h3 class="font-bold text-lg text-indigo-700">步驟 C：Controller 接收並呼叫 Service</h3>
+                    <p class="text-sm text-slate-500 mb-4">API 接收 JSON 並自動轉換為 <code>Employee</code> 物件，隨即交給 Service 層處理業務邏輯。</p>
                     <pre><code class="language-csharp">[HttpPost]
 public IActionResult Post(Employee emp) 
 {
+    // 調用服務層
     var result = _service.AddEmployee(emp);
     return CreatedAtAction(nameof(Get), new { id = result.EmployeeId }, result);
 }</code></pre>
                 </div>
 
-                <!-- Step 3 -->
+                <!-- Step 4 -->
                 <div class="process-step">
-                    <h3 class="font-bold text-lg text-indigo-700">步驟 C：Service 處理業務邏輯</h3>
-                    <p class="text-sm text-slate-500 mb-4">在 <code>EmployeeService</code> 中，我們會先確認 <code>Departments</code> 表格中是否存在該部門，確保資料完整性。</p>
+                    <h3 class="font-bold text-lg text-indigo-700">步驟 D：Service 執行業務驗證</h3>
+                    <p class="text-sm text-slate-500 mb-4">這裏會檢查 <code>Departments</code> 資料表，確認部門名稱有效，這就是所謂的商業規則驗證。</p>
                     <pre><code class="language-csharp">public Employee AddEmployee(Employee emp) 
 {
-    // 檢查部門是否存在
-    var deptExists = _deptService.GetAll().Any(d => d.DepartmentName == emp.Department);
-    if (!deptExists) throw new Exception("無效的部門名稱");
+    // 跨表檢查：確認部門是否存在於 Departments 表
+    var deptExists = _deptService.GetByName(emp.Department);
+    if (deptExists == null) throw new Exception("部門不存在");
 
-    return _repository.Save(emp); // 進入資料庫層
+    return _repository.Insert(emp); // 呼叫資料存取層
 }</code></pre>
                 </div>
 
-                <!-- Step 4 -->
+                <!-- Step 5 -->
                 <div class="process-step">
-                    <h3 class="font-bold text-lg text-indigo-700">步驟 D：資料庫回復 (CRUD Result)</h3>
-                    <p class="text-sm text-slate-500 mb-4">SQL Server 執行 <code>INSERT</code> 指令，並回傳自動生成的 <code>EmployeeId</code>。</p>
+                    <h3 class="font-bold text-lg text-indigo-700">步驟 E：資料庫執行 CURD</h3>
+                    <p class="text-sm text-slate-500 mb-4">SQL Server 接收指令，完成 Employees 表的新增並回傳 ID。</p>
                     <div class="bg-slate-100 p-4 rounded text-xs font-mono text-slate-700">
                         INSERT INTO [Employees] (EmployeeName, Department, DateOfJoining, PhotoFileName) <br>
                         VALUES ('李大明', 'IT 部門', '2026-02-10', 'daming.png'); <br>
-                        -- 回傳：EmployeeId = 1
+                        -- DB 回復成功，回傳 Identity ID
                     </div>
                 </div>
 
-                <!-- Step 5 -->
+                <!-- Step 6 -->
                 <div class="process-step border-transparent">
-                    <h3 class="font-bold text-lg text-emerald-600">步驟 E：客戶端收到 201 Created 回復</h3>
-                    <p class="text-sm text-slate-500">最終 API 將帶有 ID 的完整物件回傳，前端即可更新 UI 顯示新員工。</p>
+                    <h3 class="font-bold text-lg text-emerald-600">步驟 F：回復客戶端</h3>
+                    <p class="text-sm text-slate-500">API 回傳 HTTP 201 狀態碼與 JSON 結果，完成整個請求流程。</p>
                 </div>
             </div>
         </section>
