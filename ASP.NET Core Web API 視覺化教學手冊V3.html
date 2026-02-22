@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASP.NET Core Web API 完整開發手冊</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
+        .flow-container { background: #fff; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .code-block { position: relative; }
+        .step-card { transition: transform 0.2s; }
+        .step-card:hover { transform: translateY(-5px); }
+        .cli-cmd { @apply bg-slate-900 text-emerald-400 p-4 rounded-lg font-mono text-sm mb-4 block border-l-4 border-emerald-500 shadow-inner; }
+        code { font-family: 'Consolas', 'Monaco', monospace !important; }
+        .process-step { @apply border-l-4 border-indigo-500 pl-6 py-4 relative; }
+        .process-step::before { content: ""; @apply absolute -left-[9px] top-6 w-4 h-4 bg-indigo-500 rounded-full border-2 border-white; }
+        table { @apply w-full text-left border-collapse mb-6; }
+        th { @apply bg-slate-100 p-3 text-slate-700 font-bold border-b-2 border-slate-200; }
+        td { @apply p-3 border-b border-slate-100 text-sm; }
+        .annotation { @apply text-pink-600 font-bold; }
+        .interface-badge { @apply bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-mono text-xs font-bold; }
+        .repo-badge { @apply bg-rose-100 text-rose-700 px-2 py-0.5 rounded font-mono text-xs font-bold; }
+        .pipeline-item { @apply flex items-center p-3 mb-2 rounded-lg border transition-all; }
+        .pipeline-item-active { @apply bg-indigo-50 border-indigo-200 text-indigo-700; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-indigo-700 text-white py-12 px-6 text-center shadow-lg">
+        <h1 class="text-4xl font-bold mb-4">ASP.NET Core Web API 實戰教學</h1>
+        <p class="text-xl text-indigo-100">專案實作：Employees 與 Departments 管理系統</p>
+    </header>
+
+    <main class="max-w-5xl mx-auto py-12 px-6">
+        
+        <!-- Section 1: 核心流程圖解 (精細管線版) -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">1. 請求生命週期：深度管線 (Request Pipeline)</h2>
+            <p class="mb-6 text-slate-600">一個 HTTP 請求從進入到回傳，在 .NET 內部會經歷以下精密的環節：</p>
+            
+            <div class="flow-container p-6 bg-slate-50">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="pipeline-item border-slate-300 bg-white">
+                        <span class="font-bold mr-3 text-slate-400">01</span> <span>客戶端 (Client)</span>
+                    </div>
+                    <div class="pipeline-item border-slate-300 bg-white">
+                        <span class="font-bold mr-3 text-slate-400">02</span> <span>網頁伺服器 (Kestrel)</span>
+                    </div>
+                    <div class="pipeline-item pipeline-item-active">
+                        <span class="font-bold mr-3 text-indigo-500">03</span> <span>Middleware (Exception/Auth)</span>
+                    </div>
+                    <div class="pipeline-item pipeline-item-active">
+                        <span class="font-bold mr-3 text-indigo-500">04</span> <span>端點路由 (Endpoint Routing)</span>
+                    </div>
+                    <div class="pipeline-item border-amber-200 bg-amber-50 text-amber-700">
+                        <span class="font-bold mr-3">05</span> <span>模型綁定 (Model Binding)</span>
+                    </div>
+                    <div class="pipeline-item border-amber-200 bg-amber-50 text-amber-700">
+                        <span class="font-bold mr-3">06</span> <span>模型驗證 (Model Validation)</span>
+                    </div>
+                    <div class="pipeline-item border-slate-300 bg-white">
+                        <span class="font-bold mr-3 text-slate-400">07</span> <span>過濾器管線 (Filter Pipeline)</span>
+                    </div>
+                    <div class="pipeline-item border-indigo-200 bg-indigo-600 text-white">
+                        <span class="font-bold mr-3">08</span> <span>控制器 Action (Controller)</span>
+                    </div>
+                    <div class="pipeline-item border-emerald-300 bg-emerald-500 text-white">
+                        <span class="font-bold mr-3">09</span> <span>服務層 (Service)</span>
+                    </div>
+                    <div class="pipeline-item border-rose-300 bg-rose-500 text-white">
+                        <span class="font-bold mr-3">10</span> <span>倉儲層 (Repository)</span>
+                    </div>
+                    <div class="pipeline-item border-slate-800 bg-slate-800 text-white">
+                        <span class="font-bold mr-3">11</span> <span>DbContext (EF Core)</span>
+                    </div>
+                    <div class="pipeline-item border-slate-800 bg-slate-200 text-slate-800">
+                        <span class="font-bold mr-3">12</span> <span>資料庫 (Database)</span>
+                    </div>
+                </div>
+                <div class="mt-6 p-4 bg-indigo-50 rounded-lg text-center text-sm text-indigo-600 italic">
+                    <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"></path></svg>
+                    第 13 步：Response 回傳時，會依原路「反向」通過 Middleware 進行最終處理（如日誌紀錄）。
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: 表格欄位詳細配置 -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">2. 資料表欄位詳細配置 (Table Schema)</h2>
+            <div class="space-y-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-bold text-indigo-700 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        Employees (員工表)
+                    </h3>
+                    <table>
+                        <thead>
+                            <tr><th>欄位名稱</th><th>資料類型</th><th>說明</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="font-mono text-indigo-600">EmployeeId</td><td>int</td><td>PK, Identity (自動遞增)</td></tr>
+                            <tr><td class="font-mono text-indigo-600">EmployeeName</td><td>nvarchar(100)</td><td>員工全名 (NOT NULL)</td></tr>
+                            <tr><td class="font-mono text-indigo-600">Department</td><td>nvarchar(100)</td><td>部門名稱 (NOT NULL)</td></tr>
+                            <tr><td class="font-mono text-indigo-600">DateOfJoining</td><td>datetime2(7)</td><td>入職日期</td></tr>
+                            <tr><td class="font-mono text-indigo-600">PhotoFileName</td><td>nvarchar(500)</td><td>照片檔名</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: 開發工具與快速啟動 -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">3. 開發工具與快速啟動 (VS Code CLI)</h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+                <code class="cli-cmd">
+                    dotnet new webapi -n EmployeeManager<br>
+                    cd EmployeeManager<br>
+                    dotnet add package Microsoft.EntityFrameworkCore.SqlServer<br>
+                    dotnet watch run
+                </code>
+            </div>
+        </section>
+
+        <!-- Section 4: Model 實體模型配置 -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">4. Model 配置與自動驗證 (Validation)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-md font-bold mb-4 text-slate-700">Employee.cs 配置</h3>
+                    <pre><code class="language-csharp">using System.ComponentModel.DataAnnotations;
+
+public class Employee
+{
+    [Key]
+    public int EmployeeId { get; set; }
+
+    [Required] // 觸發 Model Validation
+    [StringLength(100)]
+    public string EmployeeName { get; set; } = "";
+
+    [Required]
+    public string Department { get; set; } = "";
+    
+    public DateTime DateOfJoining { get; set; }
+    public string PhotoFileName { get; set; } = "";
+}</code></pre>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 text-sm">
+                    <h4 class="font-bold text-slate-800 mb-4">Model 在 Pipeline 的關鍵期</h4>
+                    <p class="mb-4">當請求到達第 5 步時，.NET 會執行：</p>
+                    <ul class="list-disc list-inside space-y-2 text-slate-600">
+                        <li><b>Model Binding</b>：將 JSON 自動轉為 <code>Employee</code> 物件。</li>
+                        <li><b>Model Validation</b>：檢查 <code>[Required]</code> 等標記。若驗證失敗，管線會在此阻斷並回傳 400 錯誤。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Interface 與 Repository 實作 -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">5. 架構核心：Interface 與 Repository</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-md font-bold mb-4 text-slate-700">IEmployeeRepository.cs (契約)</h3>
+                    <pre><code class="language-csharp">public interface IEmployeeRepository
+{
+    IEnumerable&lt;Employee&gt; GetEmployees();
+    Employee AddEmployee(Employee emp);
+}</code></pre>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-md font-bold mb-4 text-slate-700">EmployeeRepository.cs (實作)</h3>
+                    <pre><code class="language-csharp">public class EmployeeRepository : IEmployeeRepository
+{
+    // 注入 DbContext 直接對話資料庫 (第 11 步)
+    private readonly EmployeeDbContext _context;
+    public EmployeeRepository(EmployeeDbContext ctx) => _context = ctx;
+
+    public Employee AddEmployee(Employee emp)
+    {
+        _context.Employees.Add(emp);
+        _context.SaveChanges();
+        return emp;
+    }
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6: 詳細流程詳解 (13 步驟演練) -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">6. 實戰演練：從請求到回復的完整路由</h2>
+            <p class="mb-8 text-slate-600 font-medium italic">以「新增員工」為例，觀察每一層級的轉變：</p>
+
+            <div class="space-y-4">
+                <div class="process-step">
+                    <h3 class="font-bold text-lg text-indigo-700">Step 1-3：Client 到 Middleware</h3>
+                    <p class="text-sm text-slate-500 mb-2 text-wrap">請求通過 Kestrel，Exception Middleware 會在此捕捉整個流程的錯誤。</p>
+                </div>
+
+                <div class="process-step">
+                    <h3 class="font-bold text-lg text-amber-600">Step 4-6：路由、綁定與驗證</h3>
+                    <p class="text-sm text-slate-500 mb-2 text-wrap">系統判定 URL 與 POST 動詞，將 JSON 內容「綁定」到 Model，並執行屬性檢查。</p>
+                </div>
+
+                <div class="process-step">
+                    <h3 class="font-bold text-lg text-indigo-700">Step 7-8：Filter 到 Controller Action</h3>
+                    <p class="text-sm text-slate-500 mb-2 text-wrap">通過 Filter（如日誌記錄）後，進入 Controller。Controller 呼叫 Service 介面。</p>
+                </div>
+
+                <div class="process-step">
+                    <h3 class="font-bold text-lg text-emerald-600">Step 9-11：Service、Repository 到 DbContext</h3>
+                    <p class="text-sm text-slate-500 mb-2 text-wrap">Service 處理邏輯，Repository 呼叫 DbContext，EF Core 生成 SQL 並準備發送。</p>
+                </div>
+
+                <div class="process-step">
+                    <h3 class="font-bold text-lg text-slate-800">Step 12-13：資料庫存取與 Response 反向傳回</h3>
+                    <p class="text-sm text-slate-500 mb-2 text-wrap">SQL 執行完成後，結果封裝成 Response，沿路反向穿過所有 Middleware 回到 Client。</p>
+                    <div class="bg-slate-100 p-3 rounded text-xs font-mono text-slate-700">
+                        Response Status: 201 Created <br>
+                        Location: /api/employees/1
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 7: 測試指南 -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">7. 如何測試 (Testing)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 shadow-sm text-nowrap">
+                    <h4 class="font-bold mb-2">使用 Swagger UI</h4>
+                    <p class="text-sm text-slate-600">存取 <code>/swagger</code> 進行視覺化測試。</p>
+                </div>
+                <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-100 shadow-sm text-nowrap">
+                    <h4 class="font-bold mb-2">使用 VS Code REST Client</h4>
+                    <p class="text-sm text-slate-600">使用 <code>.http</code> 檔案撰寫測試腳本。</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-8 text-slate-400 text-sm border-t border-slate-100">
+        ASP.NET Core Web API 學習手冊 &copy; 2026
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-csharp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+</body>
+</html>
