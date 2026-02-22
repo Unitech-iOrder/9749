@@ -36,7 +36,7 @@
         <!-- Section 1: 核心流程圖解 -->
         <section class="mb-16">
             <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">1. 請求的生命週期 (Life of a Request)</h2>
-            <p class="mb-6 text-slate-600">當客戶端發送一個請求時，路由系統（Routing）是決定請求去向的導航儀：</p>
+            <p class="mb-6 text-slate-600">請求在進入資料庫前，會透過 <b>Model</b> 作為橋樑，確保資料結構正確：</p>
             
             <div class="flow-container p-8 overflow-x-auto">
                 <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4">
@@ -69,7 +69,7 @@
                     <!-- Service -->
                     <div class="bg-emerald-500 text-white p-4 rounded-lg text-center w-32 shadow-md step-card">
                         <div class="font-bold text-sm text-nowrap">Service</div>
-                        <div class="text-[10px] text-emerald-50">執行 CRUD</div>
+                        <div class="text-[10px] text-emerald-50">操作 Model</div>
                     </div>
                     <div class="text-indigo-400 font-bold">→</div>
                     <!-- DB -->
@@ -77,7 +77,7 @@
                         <div class="w-16 h-16 bg-slate-800 text-white rounded-lg flex items-center justify-center mb-2">
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
                         </div>
-                        <span class="font-bold text-sm">資料庫</span>
+                        <span class="font-bold text-sm text-nowrap">Database (Model映射)</span>
                     </div>
                 </div>
             </div>
@@ -171,7 +171,7 @@
             </div>
         </section>
 
-        <!-- Section 3: 開發工具與快速啟動 (已調整順序) -->
+        <!-- Section 3: 開發工具與快速啟動 -->
         <section class="mb-16">
             <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">3. 開發工具與快速啟動 (VS Code CLI)</h2>
             <p class="mb-4 text-slate-600">在開始寫程式之前，必須先透過 .NET CLI 建立專案骨架：</p>
@@ -189,7 +189,7 @@
             </div>
         </section>
 
-        <!-- Section 4: Model 實體模型配置 (已調整順序) -->
+        <!-- Section 4: Model 實體模型配置 (C# Classes) -->
         <section class="mb-16">
             <h2 class="text-2xl font-bold border-l-4 border-indigo-600 pl-4 mb-8">4. Model 實體模型配置 (C# Classes)</h2>
             <p class="mb-6 text-slate-600">專案建立完成後，我們在 <code>Models/</code> 資料夾下定義與資料表對應的 POCO 類別：</p>
@@ -224,15 +224,15 @@ public class Employee
                     <ul class="space-y-4 text-sm text-slate-600">
                         <li class="flex items-start">
                             <span class="bg-pink-100 text-pink-600 px-2 py-0.5 rounded font-mono mr-2 text-xs">[Key]</span>
-                            <span>標記主鍵，Entity Framework 會自動識別。</span>
+                            <span>標記主鍵，Entity Framework 會自動識別並關聯至 DB 的 PK。</span>
                         </li>
                         <li class="flex items-start">
                             <span class="bg-pink-100 text-pink-600 px-2 py-0.5 rounded font-mono mr-2 text-xs">[Required]</span>
-                            <span>API 接收請求時會自動檢查此欄位是否為空。</span>
+                            <span>模型驗證器會確保傳入的資料不為 Null。</span>
                         </li>
                         <li class="flex items-start">
                             <span class="bg-pink-100 text-pink-600 px-2 py-0.5 rounded font-mono mr-2 text-xs">[StringLength]</span>
-                            <span>限制字串長度，與資料庫設定保持一致。</span>
+                            <span>限制字串長度，與 DB 的 nvarchar(100) 達成同步。</span>
                         </li>
                     </ul>
                 </div>
@@ -266,29 +266,31 @@ public class Employee
 
                 <div class="process-step">
                     <h3 class="font-bold text-lg text-indigo-700">步驟 C：Controller 接收並呼叫 Service</h3>
-                    <p class="text-sm text-slate-500 mb-4 text-wrap">API 接收 JSON 並根據 <span class="annotation">Model 配置</span> 自動驗證與轉換為物件。</p>
+                    <p class="text-sm text-slate-500 mb-4 text-wrap">API 接收 JSON 並根據 <span class="annotation">Model 配置</span> 自動驗證與轉換為 C# 物件。</p>
                     <pre><code class="language-csharp">[HttpPost]
 public IActionResult Post(Employee emp) 
 {
+    // 此處的 emp 實例就是 Model 
     var result = _service.AddEmployee(emp);
     return CreatedAtAction(nameof(Get), new { id = result.EmployeeId }, result);
 }</code></pre>
                 </div>
 
                 <div class="process-step">
-                    <h3 class="font-bold text-lg text-indigo-700">步驟 D：Service 執行業務驗證</h3>
-                    <p class="text-sm text-slate-500 mb-4 text-wrap">檢查 <code>Departments</code> 資料表，確認部門名稱有效。</p>
+                    <h3 class="font-bold text-lg text-indigo-700">步驟 D：Service 執行業務驗證 (操作 Model)</h3>
+                    <p class="text-sm text-slate-500 mb-4 text-wrap">Service 拿到 Model 物件後，進行最後的邏輯檢查與資料庫保存。</p>
                     <pre><code class="language-csharp">public Employee AddEmployee(Employee emp) 
 {
+    // 使用 Model 中的屬性進行檢查
     var deptExists = _deptService.GetByName(emp.Department);
     if (deptExists == null) throw new Exception("部門不存在");
 
-    return _repository.Insert(emp);
+    return _repository.Insert(emp); // 將 Model 傳入持久層
 }</code></pre>
                 </div>
 
                 <div class="process-step">
-                    <h3 class="font-bold text-lg text-indigo-700">步驟 E：資料庫執行 CURD</h3>
+                    <h3 class="font-bold text-lg text-indigo-700">步驟 E：資料庫執行 CURD (映射 Model)</h3>
                     <div class="bg-slate-100 p-4 rounded text-xs font-mono text-slate-700">
                         INSERT INTO [Employees] (EmployeeName, Department, DateOfJoining, PhotoFileName) <br>
                         VALUES ('李大明', 'IT 部門', '2026-02-10', 'daming.png');
